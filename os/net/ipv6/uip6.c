@@ -1254,6 +1254,17 @@ uip_process(uint8_t flag)
       LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
       LOG_INFO_("\n");
       UIP_STAT(++uip_stat.ip.forwarded);
+      #ifdef ENABLE_SELECTIVE_FORWARD_ATTACK
+      /**
+        all forwarded packets are dropped but not ICMPv6 packets code 155 (RPL packets).
+        RPL(non-storing mode) where DAO messages are forwarded back to the root of DODAG
+      */
+      if(UIP_ICMP_BUF->type != 155) {
+        LOG_WARN("SMASH: Dropping the packets of type %u\n", UIP_ICMP_BUF->type);
+        goto drop;
+      }
+      LOG_WARN("PASS: Allowing packets of type %u\n", UIP_ICMP_BUF->type);
+      #endif
       goto send;
     } else {
       if((uip_is_addr_linklocal(&UIP_IP_BUF->srcipaddr)) &&

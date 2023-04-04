@@ -207,7 +207,10 @@ parse(void)
 {
   frame802154_t frame;
   int hdr_len;
-
+  #ifdef INTERMEDIATE_NODE_MAC_ADDRESS
+  // { 0, 18, 75, 0, 12, 101, 190, 7}
+  const linkaddr_t linkaddr_br = { INTERMEDIATE_NODE_MAC_ADDRESS  };
+  #endif
   hdr_len = frame802154_parse(packetbuf_dataptr(), packetbuf_datalen(), &frame);
 
   if(hdr_len && packetbuf_hdrreduce(hdr_len)) {
@@ -254,8 +257,24 @@ parse(void)
     LOG_INFO_(" ");
     LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
     LOG_INFO_(" %d %u (%u)\n", hdr_len, packetbuf_datalen(), packetbuf_totlen());
+  #ifdef INTERMEDIATE_NODE_MAC_ADDRESS
+    // Check if the source address is from the defined MAC, and if not drop the packet
+    if(linkaddr_cmp(&linkaddr_br,(linkaddr_t *)&frame.src_addr)){
+      LOG_INFO("ALLOW: Packet from whitelisted source ");
+      LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_SENDER));
+      LOG_INFO_("\n");
 
+      return hdr_len;
+    }
+
+    LOG_INFO("DROP: Packet from unwanted source ");
+    LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_SENDER));
+    LOG_INFO_("\n");
+    
+    return FRAMER_FAILED;
+  #else
     return hdr_len;
+  #endif
   }
   return FRAMER_FAILED;
 }

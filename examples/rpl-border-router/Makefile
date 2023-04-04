@@ -8,6 +8,8 @@ PLATFORMS_EXCLUDE = z1
 # Include RPL BR module
 include $(CONTIKI)/Makefile.dir-variables
 MODULES += $(CONTIKI_NG_SERVICES_DIR)/rpl-border-router
+## Include Interactive Shell Module
+## MODULES += os/services/shell
 # Include webserver module
 MODULES_REL += webserver
 # Include optional target-specific module
